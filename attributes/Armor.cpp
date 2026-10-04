@@ -3,7 +3,7 @@
 
 Armor::Armor(int unitArmor) : value_(unitArmor) {
     if (unitArmor < 0) {
-        throw std::invalid_argument("Armor->creator: unitArmor <= 0");
+        throw std::invalid_argument("Armor->creator: unitArmor < 0");
     }
 }
 
