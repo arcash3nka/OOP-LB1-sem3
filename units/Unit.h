@@ -49,7 +49,7 @@ public:
     virtual std::string getType() const = 0;
     
     // возвращается класс юнита
-    virtual std::string getClass() const = 0;
+    virtual std::string getCategory() const = 0;
 
     // = 0: означает, что реализацию каждый наследник делает самостоятельно
     // когда указатель уничтожается, он сам вызывает delete, поэтому утечек нет
