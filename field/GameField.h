@@ -1,6 +1,8 @@
 #pragma once
 #include <memory>
 #include <vector>
+#include <cstddef>    // std::size_t, std::ptrdiff_t
+#include <iterator>   // std::forward_iterator_tag
 #include "factories/UnitFactory.h"
 #include "units/Unit.h"
 
@@ -62,4 +64,47 @@ public:
     int size() const; // сколько юнитов сейчас
     bool empty() const;
     void clear(); // очистить юнитов
+
+    // ============== Класс итератора ==============
+    // вложенный, потому что классу итератора нужно поле для обхода
+    // + есть доступ к private
+    // сам класс независим и по сути лежит как будто в папке, только в поле gamefield
+
+    // по сути своей итератор - это закладка, которая бегает по полю
+    // операторы сравнения также сравнивают не юнитов, а итераторы
+    // по сути каждый итератор отвечает за КАЖДОЕ действие на поле
+    // то есть если два юнита двигаются, то цикл будет создавать два итератора
+    class Iterator {
+    private:
+        // конструктор private: создавать итераторы может только лишь поле через begin/end
+        // friend: дает GameField доступ к private Iterator
+        friend class GameField;
+        Iterator(std::vector<std::unique_ptr<Unit>>*, std::size_t pos);
+
+        void skipEmpty();
+        std::vector<std::unique_ptr<Unit>>* data_; // список тех, на кого смотрим при проходе
+        std::size_t pos_; // индекс
+
+    public:
+        //  для совместимости с STL
+        // std::count_if и др: спрашивают у итератора, что он умеет и что выдаёт
+        // using: обозначение типа данных. то есть вместо value_type можно писать Unit
+        using iterator_category = std::forward_iterator_tag; // умеет только вперёд
+        using value_type = Unit; // возвращает тип юнита
+        using difference_type = std::ptrdiff_t; // возвращает количество шагов между двумя итераторами
+        using pointer = Unit*; // что возвращает operator->
+        using reference = Unit&; // что возвращает operator*
+
+        // продолжение создания частей типа данных
+        // тут задаются операторы для объектов класса Unit
+        Unit& operator*() const; // *it  — юнит в текущей клетке
+        Unit* operator->() const;  // it-> — обратиться к методу юнита
+        Iterator& operator++();  // ++it — префиксный
+        Iterator operator++(int); // it++ — постфиксный (int — просто метка)
+        bool operator==(const Iterator& other) const;
+        bool operator!=(const Iterator& other) const;
+    };
+    
+    Iterator begin(); // первый юнит
+    Iterator end(); // позиция за последней клеткой
 };

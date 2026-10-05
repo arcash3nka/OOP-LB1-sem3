@@ -177,3 +177,59 @@ void GameField::clear() {
     
     unitCount_ = 0;
 }
+
+// ================= Итератор =================
+GameField::Iterator::Iterator(std::vector<std::unique_ptr<Unit>>* data, std::size_t pos)
+    : data_(data), pos_(pos) {
+    // сразу пропускаем пустые клетки
+    skipEmpty();
+}
+
+void GameField::Iterator::skipEmpty() {
+    // пока не дошли до конца И клетка пустая — шагаем дальше
+    while (pos_ < data_->size() && !(*data_)[pos_]) {
+        ++pos_;
+    }
+}
+
+// (*data_)[pos_]: unique_ptr в клетке
+// ещё одна * — сам юнит
+Unit& GameField::Iterator::operator*() const {
+    return *(*data_)[pos_];
+}
+
+Unit* GameField::Iterator::operator->() const {
+    return (*data_)[pos_].get();
+}
+
+// ++it: сдвинулись, пропустили пустые клетки, вернули себя же
+GameField::Iterator& GameField::Iterator::operator++() {
+    ++pos_;
+    skipEmpty();
+    return *this;
+}
+
+// it++: запомнили старое положение, сдвинулись, вернули старую версию себя
+GameField::Iterator GameField::Iterator::operator++(int) {
+    Iterator old = *this;
+    ++(*this);
+    return old;
+}
+
+bool GameField::Iterator::operator==(const Iterator& other) const {
+    return data_ == other.data_ && pos_ == other.pos_;
+}
+
+bool GameField::Iterator::operator!=(const Iterator& other) const {
+    return !(*this == other);
+}
+
+GameField::Iterator GameField::begin() {
+    // с начала (конструктор сам найдёт первого юнита)
+    return Iterator(&cells_, 0);
+}
+
+GameField::Iterator GameField::end() {
+    // за концом
+    return Iterator(&cells_, cells_.size());
+}
